@@ -9,11 +9,10 @@ image_paths = glob.glob('cam0[5-8].jpg')
 print(image_paths)
 images = {}
 
-# Loop through each path, read the image, and add it to the list
 for path in image_paths:
-    img = cv.imread(path)  # Read the image
+    img = cv.imread(path)
     if img is not None:
-        images[path] = img  # Add the image to the list
+        images[path] = img
     else:
         print(f'Warning: Could not read image at {path}')
 

@@ -81,7 +81,7 @@ class ONCE(object):
         return osp.join(self.dataset_root, 'ImageSets', 'raw_large.txt')
 
     def _find_split_name(self, seq_id):
-        print(f"Searching for sequence ID: {seq_id}")  # Add this line
+        print(f"Searching for sequence ID: {seq_id}")
         print(self.train_split_list)
         if seq_id in self.raw_small_split_list:
             return 'raw_small'

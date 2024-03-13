@@ -6,17 +6,26 @@ file_path = r'C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 
 # Open and load the JSON file
 with open(file_path, 'r') as file:
     data = json.load(file)
-    # Initialize a list to hold all "annos" data
-    all_annos = []
+
+    # Initialize a list to hold all "names" lists
+    all_names = []
 
     # Assuming the structure includes a 'frames' key at the top level
     if 'frames' in data:
         for frame in data['frames']:
-            # Check if 'annos' exists
-            if 'annos' in frame:
-                # Add the "annos" data to our list
-                all_annos.append(frame['annos'])
+            # Check if 'annos' exists and then if 'names' is in 'annos'
+            if 'annos' in frame and 'names' in frame['annos']:
+                # Add the "names" list to our collection
+                all_names.append(frame['annos']['names'])
+    dictionary = {}
+    for section in all_names:
+        for object in section:
+            if object in dictionary:
+                dictionary[object] += 1
+            else:
+                dictionary[object] = 0
 
-    # Print or return the collected "annos" data
-    print(all_annos)
-    # Or return all_annos if using within a function
+    # Print or return the collected "names" lists
+    #print(all_names)
+    print(dictionary)
+    # Or return all_names if using within a function

@@ -4,7 +4,7 @@ import os.path as osp
 import os
 from collections import defaultdict
 import cv2
-import open3d as o3d
+#import open3d as o3d
 import numpy as np
 from scipy.spatial.transform import Rotation
 import numpy as np

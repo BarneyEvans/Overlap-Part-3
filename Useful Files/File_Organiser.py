@@ -8,38 +8,48 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Paths to your dataset folders; adjust them to your real paths
 dataset_root = r"C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V1\dataset"
-original_images_dir = r"C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Dataset\data_root\data\000076\cam08"
-original_labels_dir = r"C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Dataset\data_root\data\000076\cam08\Yolo_Info"
+original_images_dir = r"C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Dataset\data_root\data\000076\cam07"
+original_labels_dir = r"C:\Users\be1g21\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Dataset\data_root\data\000076\cam07\Yolo_Info"
 
-# Ensure the target directories exist; create them if not
-for phase in ["train", "val", "test"]:
+# Ensure target directories exist
+phases = ["train", "val", "test"]
+for phase in phases:
     os.makedirs(os.path.join(dataset_root, "images", phase), exist_ok=True)
     os.makedirs(os.path.join(dataset_root, "labels", phase), exist_ok=True)
-    logging.info(f"Directories for {phase} phase are ready.")
 
-# Listing all the annotation files
+# Listing annotation files and assuming images are .jpg
 annotation_files = [f for f in os.listdir(original_labels_dir) if f.endswith('.txt')]
-# Assuming images are .jpg; adjust if your case is different
 image_files = [f.replace('.txt', '.jpg') for f in annotation_files]
 
-# Splitting the files
+# Split the dataset
 train_files, test_files = train_test_split(image_files, test_size=0.2, random_state=42)
-train_files, val_files = train_test_split(train_files, test_size=0.25, random_state=42)  # Results in 60% train, 20% val, 20% test
+train_files, val_files = train_test_split(train_files, test_size=0.25, random_state=42)
 
-def copy_files(files, source_dir, target_dir):
-    """Copy files from source to target directory, preserving metadata."""
+def copy_and_rename_if_exists(files, source_dir, target_dir, phase):
+    """Copy files from source to target directory, renaming if the file already exists."""
+    suffixes = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     for f in files:
-        src_file = os.path.join(source_dir, f)
-        dst_file = os.path.join(target_dir, f)
-        if os.path.exists(dst_file):
-            logging.warning(f"{dst_file} already exists. Skipping copy...")
-        else:
-            shutil.copy2(src_file, dst_file)
-            logging.info(f"Copied {src_file} to {dst_file}")
+        base_name, ext = os.path.splitext(f)
+        for suffix in ('',) + tuple(suffixes):
+            new_name = f"{base_name}{suffix}{ext}"
+            src_file = os.path.join(source_dir, f if suffix == '' else f"{base_name}{ext}")
+            dst_file = os.path.join(target_dir, new_name)
+            if not os.path.exists(dst_file):
+                shutil.copy2(src_file, dst_file)
+                logging.info(f"Copied {src_file} to {dst_file}")
+                # Rename annotation file correspondingly
+                src_label = src_file.replace('.jpg', '.txt').replace("images", "labels")
+                dst_label = dst_file.replace('.jpg', '.txt').replace("images", "labels")
+                if os.path.exists(src_label):
+                    shutil.copy2(src_label, dst_label)
+                    logging.info(f"Copied label {src_label} to {dst_label}")
+                break
+            elif suffix == suffixes[-1]:  # If we've exhausted our suffix options
+                logging.error(f"Exhausted rename attempts for {src_file}. Skipping file.")
 
-# Copying the files to their respective directories and keeping track
-for phase, files in zip(["train", "val", "test"], [train_files, val_files, test_files]):
-    copy_files([f.replace('.jpg', '.txt') for f in files], original_labels_dir, os.path.join(dataset_root, "labels", phase))
-    copy_files(files, original_images_dir, os.path.join(dataset_root, "images", phase))
+# Copy and rename files to their respective directories
+for phase, files in zip(phases, [train_files, val_files, test_files]):
+    copy_and_rename_if_exists(files, original_images_dir, os.path.join(dataset_root, "images", phase), phase)
+    # Labels are handled inside the function to keep names synchronized
 
-logging.info("Dataset organization complete. Check the logs for details.")
+logging.info("Dataset organization complete.")

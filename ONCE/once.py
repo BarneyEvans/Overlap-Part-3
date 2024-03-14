@@ -148,6 +148,7 @@ class ONCE(object):
 
     def load_image(self, seq_id, frame_id, cam_name):
         cam_path = osp.join(self.data_root, seq_id, cam_name, '{}.jpg'.format(frame_id))
+        print(cam_path)
         img_buf = cv2.cvtColor(cv2.imread(cam_path), cv2.COLOR_BGR2RGB)
         return img_buf
 
@@ -173,6 +174,7 @@ class ONCE(object):
         split_name = self._find_split_name(seq_id)
         frame_info = getattr(self, '{}_info'.format(split_name))[seq_id][frame_id]
         for cam_name in self.__class__.camera_names:
+            print(seq_id, frame_id, cam_name)
             img_buf = self.load_image(seq_id, frame_id, cam_name)
             cam_calib = frame_info['calib'][cam_name]
             h, w = img_buf.shape[:2]
@@ -233,7 +235,7 @@ class ONCE(object):
             calib_info = frame_info['calib'][cam_name]
             cam_2_velo = calib_info['cam_to_velo']
             cam_intri = np.hstack([new_cam_intrinsic_dict[cam_name], np.zeros((3, 1), dtype=np.float32)])
-
+            
             cam_annos_3d = np.array(frame_info['annos']['boxes_3d'])
 
             corners_norm = np.stack(np.unravel_index(np.arange(8), [2, 2, 2]), axis=1).astype(
@@ -302,13 +304,7 @@ class ONCE(object):
             return points_list
         return points_list
 
-dataset_root = 'C:\\Users\\evans\\OneDrive\\Desktop\\University\\Year 3\\Part 3 Project\\ONCE Dataset\\Training\\data_root'
-dataset = ONCE(dataset_root)
 
-# The _collect_basic_infos method is called automatically here during initialization
-
-# Specify the sequence and frame ID for which you want to get annotations
-seq_id, frame_id = '000076', '1616343528200'
 
 
 

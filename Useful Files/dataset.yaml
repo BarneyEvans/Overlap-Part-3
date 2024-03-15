@@ -1,6 +1,6 @@
 # Project-specific YOLOv8 Dataset Configuration
 
-path: C:/Users/be1g21/OneDrive - University of Southampton/Desktop/Year 3/Year 3 Project/Dataset/data_root
+path: C:\Users\Barney Evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V1\dataset
 train: images/train
 val: images/val
 test: images/test

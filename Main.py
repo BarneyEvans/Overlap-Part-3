@@ -1,10 +1,7 @@
-import numpy as np
 import cv2 as cv
 import glob
-from Cameras import Camera, camera5, camera6, camera7, camera8
+from Cameras import camera5, camera6, camera7, camera8
 import os
-from matplotlib import pyplot as plt
-from PIL import Image
 
 image_paths = glob.glob('cam0[5-8].jpg')
 
@@ -23,11 +20,6 @@ def correct_distortion(image, camera):
     # Automatically undistorts image based on the intrinsic and etrinsic matrices
     undistorted_img = cv.undistort(image, camera.intrinsic_matrix, camera.distortion, None, camera.intrinsic_matrix)
     return undistorted_img
-
-
-import cv2 as cv
-import numpy as np
-import matplotlib.pyplot as plt
 
 def stereo_vision(image1, image2, camera1, camera2):
     # Ensure the images are in grayscale

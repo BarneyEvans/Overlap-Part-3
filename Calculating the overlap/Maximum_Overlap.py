@@ -104,9 +104,51 @@ def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle):
 
     return overlap_area
 
+def calculate_fov_width_at_distance(hfov, distance):
+    """
+    Calculate the width of the field of view at a certain distance.
+    """
+    hfov_rad = math.radians(hfov)
+    return 2 * distance * math.tan(hfov_rad / 2)
+
+def calculate_overlap_percentage(distance, cam1_hfov, cam2_hfov, angle1, angle2):
+    """
+    Calculate the percentage of overlap for each camera's field of view.
+
+    Parameters:
+    - distance: Distance between the two cameras.
+    - cam1_hfov, cam2_hfov: Horizontal field of view for Camera 1 and Camera 2, in degrees.
+    - angle1, angle2: Orientation angles for Camera 1 and Camera 2, in degrees.
+
+    Returns:
+    A tuple containing the percentage of overlap for Camera 1 and Camera 2.
+    """
+    # Calculate FOV widths at the intersection distance
+    cam1_fov_width = calculate_fov_width_at_distance(cam1_hfov, distance)
+    cam2_fov_width = calculate_fov_width_at_distance(cam2_hfov, distance)
+
+    # Determine the angles relative to the line connecting the cameras
+    angle1_rad = math.radians(angle1)
+    angle2_rad = math.radians(180 - angle2)  # Assuming angle2 is oriented from the opposite direction
+
+    # Calculate the distance from each camera to the intersection line of the FOVs
+    intersection_distance_cam1 = distance * math.tan(angle2_rad)
+    intersection_distance_cam2 = distance * math.tan(angle1_rad)
+
+    # Calculate the overlap width based on the intersection distances
+    overlap_width = min(intersection_distance_cam1, intersection_distance_cam2)
+
+    # Calculate the percentage of overlap for each camera
+    overlap_percentage_cam1 = (overlap_width / cam1_fov_width) * 100
+    overlap_percentage_cam2 = (overlap_width / cam2_fov_width) * 100
+
+    return overlap_percentage_cam1, overlap_percentage_cam2
+
+
+
 
 camera_distance = distance_calculation(camera_used_1, camera_used_2)
 angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
-a1= overlap_calculation(camera_distance, camera_used_1.HF0V, camera_used_2.HF0V, angle1, angle2)
-print(a1)
+a1, a2 = calculate_overlap_percentage(camera_distance, camera_used_1.HF0V, camera_used_2.HF0V, angle1, angle2)
+print(a1, a2)
 #camera_system = overlap_calculation(camera5, camera6)

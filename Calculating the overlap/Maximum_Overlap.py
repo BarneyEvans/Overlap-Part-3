@@ -1,6 +1,7 @@
 import numpy as np
 from Cameras import camera5, camera6, camera7, camera8
 import math
+import sympy as sp
 
 camera_used_1 = camera7
 camera_used_2 = camera8
@@ -77,14 +78,63 @@ def check_camera_alignment(extrinsic1, extrinsic2, leeway=5.0):
 
     # Returning angles for the primary rotation plane for both cameras for further calculations
     return angles1[primary_plane_idx], angles2[primary_plane_idx]
-def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle):
-    """
-    Conceptually estimate the area of overlap between the fields of view of two cameras,
-    including the consideration of the distance between the cameras.
 
-    This function provides a conceptual approach and does not implement detailed geometric calculations.
-    """
-    # Convert all angles from degrees to radians
+def calculate_circle_intersections(distance, radii):
+    # Define the symbols
+    x, y = sp.symbols('x y')
+
+    # Equations of the circles based on the distance and radii
+    circle1 = sp.Eq(x**2 + y**2, radii**2)
+    circle2 = sp.Eq((x - distance)**2 + y**2, radii**2)
+
+    # Solve the system of equations
+    intersection_points = sp.solve((circle1, circle2), (x, y))
+
+    # Round the coordinates to four significant figures
+    intersection_points = [(round(float(sp.re(point[0])), 4), round(float(sp.re(point[1])), 4)) for point in intersection_points]
+    return intersection_points[1]
+
+
+def calculate_arc_radius_intersection(distance_between_centres, sector_A_fov, sector_B_fov,
+                                      sector_A_displacement_angle, radii_for_both_sectors):
+    # Convert angles to radians for computation
+    sector_A_fov_rad = np.radians(sector_A_fov)
+    sector_B_fov_rad = np.radians(sector_B_fov)
+    sector_A_displacement_angle_rad = np.radians(sector_A_displacement_angle)
+
+    # Define the coordinates for the center of Sector A and Sector B
+    center_A = np.array([0, 0])  # Center of Sector A is at the origin
+    center_B = np.array([distance_between_centres, 0])  # Center of Sector B is on the x-axis
+
+    # The line equation from the center of Sector A, considering the displacement angle
+    # This line represents Sector A's radius
+    def line_A(t):
+        return np.array([t * np.cos(sector_A_displacement_angle_rad),
+                         t * np.sin(sector_A_displacement_angle_rad)])
+
+    # The circle equation for Sector B
+    def circle_B(x, y):
+        return (x - center_B[0])**2 + (y - center_B[1])**2 - radii_for_both_sectors**2
+
+    # Find the intersection point by solving the circle equation for Sector B and the line equation for Sector A
+    # We're looking for the value of 't' that satisfies both equations
+    # Using a numerical approach to solve the system of equations
+    t = np.linspace(0, radii_for_both_sectors, 1000)  # Parameter 't' for line_A
+    print(t)
+    for t_val in t:
+        x, y = line_A(t_val)
+        print(x,y)
+        if np.isclose(circle_B(x, y), 0, atol=1e-6):  # Check if point is on Sector B's arc
+            return (x, y)
+
+    return None  # If no intersection is found
+
+
+def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle):
+
+    intersect_circles = calculate_circle_intersections(distance)
+    cam1_radii_cam2_arc_intersection = calculate_arc_radius_intersection(distance, cam1_hfov, cam2_hfov, cam1_angle)
+    cam2_radii_cam1_arc_intersection = calculate_arc_radius_intersection(distance, cam2_hfov, cam1_hfov, cam2_angle)
     cam1_hfov_rad = math.radians(cam1_hfov)
     cam2_hfov_rad = math.radians(cam2_hfov)
     cam1_angle_rad = math.radians(cam1_angle)
@@ -147,8 +197,10 @@ def calculate_overlap_percentage(distance, cam1_hfov, cam2_hfov, angle1, angle2)
 
 
 
-camera_distance = distance_calculation(camera_used_1, camera_used_2)
-angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
-a1, a2 = calculate_overlap_percentage(camera_distance, camera_used_1.HF0V, camera_used_2.HF0V, angle1, angle2)
-print(a1, a2)
+#camera_distance = distance_calculation(camera_used_1, camera_used_2)
+#angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
+#a1, a2 = calculate_overlap_percentage(camera_distance, camera_used_1.HF0V, camera_used_2.HF0V, angle1, angle2)
+#print(a1, a2)
 #camera_system = overlap_calculation(camera5, camera6)
+
+print(calculate_arc_radius_intersection(3,120,120,60,100))

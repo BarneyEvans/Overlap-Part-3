@@ -16,17 +16,6 @@ def distance_calculation(cam1, cam2):
     return distance
 
 def extract_angles_from_extrinsic(extrinsic_matrix):
-    """
-    Extracts Euler angles from a 3x4 or 4x4 extrinsic matrix.
-    Assumes the matrix is in the form [R|t] where R is a 3x3 rotation matrix.
-
-    Parameters:
-    - extrinsic_matrix: The extrinsic matrix from which to extract the rotation.
-
-    Returns:
-    - A tuple of the extracted yaw, pitch, and roll angles in degrees.
-    """
-
     R = extrinsic_matrix[:3, :3]
     sy = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
 
@@ -44,17 +33,6 @@ def extract_angles_from_extrinsic(extrinsic_matrix):
 
 
 def check_camera_alignment(extrinsic1, extrinsic2, leeway=5.0):
-    """
-    Checks the alignment of two cameras based on their extrinsic matrices.
-
-    Parameters:
-    - extrinsic1: The extrinsic matrix of the first camera.
-    - extrinsic2: The extrinsic matrix of the second camera.
-    - leeway: The allowed difference in the non-primary rotation plane angles.
-
-    Throws:
-    - An error if the conditions for proper alignment are not met.
-    """
     angles1 = extract_angles_from_extrinsic(extrinsic1)
     angles2 = extract_angles_from_extrinsic(extrinsic2)
 
@@ -132,14 +110,63 @@ def calculate_arc_radius_intersection(distance_between_centres, sector_A_fov, se
         return None
 
 
+def calculate_area_between_chord_and_arc(chord_point_A, chord_point_B, center_point, radii):
+    # Convert inputs to numpy arrays to ensure compatibility with numpy operations
+    chord_point_A = np.array(chord_point_A)
+    chord_point_B = np.array(chord_point_B)
+    center_point = np.array(center_point)
+
+    # Calculate vectors from the center to each chord point
+    vector_A = chord_point_A - center_point
+    vector_B = chord_point_B - center_point
+
+    # Calculate the angle between vector_A and vector_B using the dot product formula
+    dot_product = np.dot(vector_A, vector_B)
+    cos_theta = dot_product / (radii ** 2)
+    cos_theta = np.float64(cos_theta)
+    theta = np.arccos(cos_theta)  # Central angle in radians
+
+    # Calculate the area of the sector
+    sector_area = 0.5 * radii ** 2 * theta
+
+    # Calculate the area of the triangle using the sine of theta (since we have a central angle)
+    triangle_area = 0.5 * radii ** 2 * np.sin(theta)
+
+    # Calculate the desired area between the chord and the arc
+    area_between_chord_and_arc = sector_area - triangle_area
+
+    return area_between_chord_and_arc
+
+
+def calculate_triangle_area(A, B, C):
+    x1, y1 = A
+    x2, y2 = B
+    x3, y3 = C
+
+    # Applying the area formula
+    area = 0.5 * abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
+
+    return area
+
+
 def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle, radii_for_both_sectors):
 
+    centerA = (0,0)
+    centerB = (0 + distance,0)
+
     intersect_circles = calculate_circle_intersections(distance, radii_for_both_sectors)
-    cam1_radii_cam2_arc_intersection = calculate_arc_radius_intersection(distance, cam1_hfov, cam2_hfov, cam1_angle, radii_for_both_sectors,1)
-    cam2_radii_cam1_arc_intersection = calculate_arc_radius_intersection(distance, cam2_hfov, cam1_hfov, cam2_angle, radii_for_both_sectors,2)
-    print(intersect_circles)
-    print(cam1_radii_cam2_arc_intersection)
-    print(cam2_radii_cam1_arc_intersection)
+
+    inteserctA = calculate_arc_radius_intersection(distance, cam1_hfov, cam2_hfov, cam1_angle, radii_for_both_sectors,1)
+    intersectB = calculate_arc_radius_intersection(distance, cam2_hfov, cam1_hfov, cam2_angle, radii_for_both_sectors,2)
+
+    chord_1_area = calculate_area_between_chord_and_arc(inteserctA, intersect_circles, centerB, radii_for_both_sectors)
+    chord_2_area = calculate_area_between_chord_and_arc(intersectB, intersect_circles, centerA, radii_for_both_sectors)
+
+    triangular_area_1 = calculate_triangle_area(inteserctA, intersect_circles, centerA)
+    triangular_area_2 = calculate_triangle_area(intersectB, intersect_circles, centerB)
+    triangular_area_3 = calculate_triangle_area(centerA, intersect_circles, centerB)
+
+
     cam1_hfov_rad = math.radians(cam1_hfov)
     cam2_hfov_rad = math.radians(cam2_hfov)
     cam1_angle_rad = math.radians(cam1_angle)

@@ -166,11 +166,6 @@ def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle, 
     triangular_area_2 = calculate_triangle_area(intersectB, intersect_circles, centerB)
     triangular_area_3 = calculate_triangle_area(centerA, intersect_circles, centerB)
 
-    print(chord_1_area)
-    print(chord_2_area)
-    print(triangular_area_1)
-    print(triangular_area_2)
-    print(triangular_area_3)
     total_area = chord_1_area + chord_2_area + triangular_area_1 + triangular_area_2 + triangular_area_3
 
     return total_area
@@ -188,8 +183,9 @@ def approximate_overlap(distance, angle1, angle2):
 d = distance_calculation(camera_used_1, camera_used_2)
 d = d.astype(float)
 angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
-radii_length = 1000000
+radii_length = 100
+print(angle1, angle2)
 actual_area = overlap_calculation(d,120,120,angle2,angle1, radii_length)
 approximate_area = approximate_overlap(radii_length, angle1, angle2)*-1
 total_area = approximate_overlap(radii_length, 0, 120)
-print((actual_area/total_area)*100)
+area_percentage = (actual_area/total_area)

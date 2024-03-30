@@ -69,10 +69,9 @@ def calculate_circle_intersections(distance, radii):
 
     # Solve the system of equations
     intersection_points = sp.solve((circle1, circle2), (x, y))
-
     # Round the coordinates to four significant figures
     intersection_points = [(round(float(sp.re(point[0])), 4), round(float(sp.re(point[1])), 4)) for point in intersection_points]
-    return intersection_points[1]
+    return intersection_points[-1]
 
 
 def calculate_arc_radius_intersection(distance_between_centres, sector_A_fov, sector_B_fov,
@@ -159,6 +158,7 @@ def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle, 
     inteserctA = calculate_arc_radius_intersection(distance, cam1_hfov, cam2_hfov, cam1_angle, radii_for_both_sectors,1)
     intersectB = calculate_arc_radius_intersection(distance, cam2_hfov, cam1_hfov, cam2_angle, radii_for_both_sectors,2)
 
+    print(intersect_circles, inteserctA, intersectB)
     chord_1_area = calculate_area_between_chord_and_arc(inteserctA, intersect_circles, centerB, radii_for_both_sectors)
     chord_2_area = calculate_area_between_chord_and_arc(intersectB, intersect_circles, centerA, radii_for_both_sectors)
 
@@ -166,73 +166,30 @@ def overlap_calculation(distance, cam1_hfov, cam2_hfov, cam1_angle, cam2_angle, 
     triangular_area_2 = calculate_triangle_area(intersectB, intersect_circles, centerB)
     triangular_area_3 = calculate_triangle_area(centerA, intersect_circles, centerB)
 
+    print(chord_1_area)
+    print(chord_2_area)
+    print(triangular_area_1)
+    print(triangular_area_2)
+    print(triangular_area_3)
+    total_area = chord_1_area + chord_2_area + triangular_area_1 + triangular_area_2 + triangular_area_3
 
-    cam1_hfov_rad = math.radians(cam1_hfov)
-    cam2_hfov_rad = math.radians(cam2_hfov)
-    cam1_angle_rad = math.radians(cam1_angle)
-    cam2_angle_rad = math.radians(cam2_angle)
+    return total_area
 
-    # Placeholder effective range for overlap calculation
-    effective_range = 10
 
-    # Calculate if an overlap is likely based on the distance and the angles
-    # This is a placeholder condition; actual condition would require detailed geometry
-    if distance < effective_range and abs(cam1_angle_rad - cam2_angle_rad) < (cam1_hfov_rad + cam2_hfov_rad) / 2:
-        # Simplified calculation of overlap area, assuming some overlap exists
-        # Actual calculation should consider the intersection points and shapes
-        overlap_area = min(cam1_hfov_rad, cam2_hfov_rad) * distance  # Placeholder calculation
-    else:
-        overlap_area = 0  # No overlap
-
-    return overlap_area
-
-def calculate_fov_width_at_distance(hfov, distance):
-    """
-    Calculate the width of the field of view at a certain distance.
-    """
-    hfov_rad = math.radians(hfov)
-    return 2 * distance * math.tan(hfov_rad / 2)
-
-def calculate_overlap_percentage(distance, cam1_hfov, cam2_hfov, angle1, angle2):
-    """
-    Calculate the percentage of overlap for each camera's field of view.
-
-    Parameters:
-    - distance: Distance between the two cameras.
-    - cam1_hfov, cam2_hfov: Horizontal field of view for Camera 1 and Camera 2, in degrees.
-    - angle1, angle2: Orientation angles for Camera 1 and Camera 2, in degrees.
-
-    Returns:
-    A tuple containing the percentage of overlap for Camera 1 and Camera 2.
-    """
-    # Calculate FOV widths at the intersection distance
-    cam1_fov_width = calculate_fov_width_at_distance(cam1_hfov, distance)
-    cam2_fov_width = calculate_fov_width_at_distance(cam2_hfov, distance)
-
-    # Determine the angles relative to the line connecting the cameras
-    angle1_rad = math.radians(angle1)
-    angle2_rad = math.radians(180 - angle2)  # Assuming angle2 is oriented from the opposite direction
-
-    # Calculate the distance from each camera to the intersection line of the FOVs
-    intersection_distance_cam1 = distance * math.tan(angle2_rad)
-    intersection_distance_cam2 = distance * math.tan(angle1_rad)
-
-    # Calculate the overlap width based on the intersection distances
-    overlap_width = min(intersection_distance_cam1, intersection_distance_cam2)
-
-    # Calculate the percentage of overlap for each camera
-    overlap_percentage_cam1 = (overlap_width / cam1_fov_width) * 100
-    overlap_percentage_cam2 = (overlap_width / cam2_fov_width) * 100
-
-    return overlap_percentage_cam1, overlap_percentage_cam2
+def approximate_overlap(distance, angle1, angle2):
+    angle = angle2 - angle1
+    area = np.pi * distance * distance
+    circle_area = angle/360
+    total = area*circle_area
+    return total
 
 
 
-
-
-#angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
-#a1, a2 = calculate_overlap_percentage(camera_distance, camera_used_1.HF0V, camera_used_2.HF0V, angle1, angle2)
-#print(a1, a2)
-#camera_system = overlap_calculation(camera5, camera6)
-overlap_calculation(3,120,120,60,120, 100)
-#print(calculate_arc_radius_intersection(3,120,120,60,100))
+d = distance_calculation(camera_used_1, camera_used_2)
+d = d.astype(float)
+angle1, angle2 = check_camera_alignment(camera_used_1.extrinsic_matrix, camera_used_2.extrinsic_matrix)
+radii_length = 1000000
+actual_area = overlap_calculation(d,120,120,angle2,angle1, radii_length)
+approximate_area = approximate_overlap(radii_length, angle1, angle2)*-1
+total_area = approximate_overlap(radii_length, 0, 120)
+print((actual_area/total_area)*100)

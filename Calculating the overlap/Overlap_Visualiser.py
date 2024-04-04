@@ -1,8 +1,8 @@
 from PIL import Image, ImageDraw
 from Maximum_Overlap import area_percentage
+import os
 
-
-def apply_gradient_overlay(image, overlap_percent, side, start_opacity=255, end_opacity=0):
+def apply_gradient_overlay(image, overlap_percent, side, start_opacity=125, end_opacity=125):
     # Calculate the width of the overlap region
     width, height = image.size
     overlap_width = int(width * overlap_percent)
@@ -35,24 +35,29 @@ def apply_gradient_overlay(image, overlap_percent, side, start_opacity=255, end_
     return image
 
 
-def create_highlighted_images(first_image_path, second_image_path, overlap_percent):
+def create_highlighted_images(first_image_path, second_image_path, overlap_percent, output_dir):
     # Load images
-    first_image = Image.open(first_image_path).convert('RGBA')
-    second_image = Image.open(second_image_path).convert('RGBA')
+    first_image = Image.open(first_image_path)
+    second_image = Image.open(second_image_path)
 
     # Apply the gradient overlay to the right side of the first image
     first_image_with_highlight = apply_gradient_overlay(first_image, overlap_percent, 'right', start_opacity=64)
     # Apply the gradient overlay to the left side of the second image
     second_image_with_highlight = apply_gradient_overlay(second_image, overlap_percent, 'left', start_opacity=64)
 
-    # Save or display the images
-    first_image_with_highlight.show()
-    second_image_with_highlight.show()
+    # Save the images with new file names in the output directory
+    first_image_name = os.path.basename(first_image_path)
+    second_image_name = os.path.basename(second_image_path)
 
+    first_image_with_highlight.save(os.path.join(output_dir, first_image_name.replace('.jpg', '_with_highlight.jpg')))
+    second_image_with_highlight.save(os.path.join(output_dir, second_image_name.replace('.jpg', '_with_highlight.jpg')))
+
+
+output_dir = "../Images/Undistorted_Images/Undistored_Images_Overlap"
 
 # Paths relative to the script location
-first_image_path = "../Images/cam07.jpg"
-second_image_path = "../Images/cam08.jpg"
+first_image_path = "../Images/Undistorted_Images/cam07.jpg"
+second_image_path = "../Images/Undistorted_Images/cam08.jpg"
 
 # Example usage with a 20% overlap
-create_highlighted_images(first_image_path, second_image_path, area_percentage)
+create_highlighted_images(first_image_path, second_image_path, area_percentage, output_dir)

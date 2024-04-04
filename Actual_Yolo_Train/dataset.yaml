@@ -1,0 +1,15 @@
+# Project-specific YOLOv8 Dataset Configuration
+
+path: C:\Users\Barney Evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V1\dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 5
+names:
+  - Car
+  - Truck
+  - Cyclist
+  - Pedestrian
+  - Bus

@@ -1,9 +1,11 @@
 import cv2 as cv
 import glob
+import numpy as np
 from Cameras import camera5, camera6, camera7, camera8
 import os
+import matplotlib.pyplot as plt
 
-image_paths = glob.glob('cam0[5-8].jpg')
+image_paths = glob.glob('../Images/cam0[5-8].jpg')
 
 print(image_paths)
 images = {}
@@ -105,7 +107,7 @@ stereo_vision(images['cam08.jpg'], images['cam07.jpg'], camera7, camera8)
 side_by_side1 = np.concatenate((camera7_distortion_corrected, camera8_distortion_corrected), axis=1)
 side_by_side2 = np.concatenate((images['cam07.jpg'], images['cam08.jpg']), axis=1)
 # Define the output directory
-output_dir = 'output_images'
+output_dir = '../Images/Undistorted_Images'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 

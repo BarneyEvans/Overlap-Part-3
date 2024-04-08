@@ -33,6 +33,7 @@ def save_annotations_for_cam(frames, output_dir, camera, class_mapping, image_di
             continue
 
         with open(os.path.join(output_dir, f"{frame_id}.txt"), 'w') as file:
+            print(os.path.join(output_dir, f"{frame_id}.txt"))
             for name, box_2d in zip(names, boxes_2d):
                 if box_2d[0] == -1.0:  # Skip invalid boxes
                     continue

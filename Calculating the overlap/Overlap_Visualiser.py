@@ -53,11 +53,11 @@ def create_highlighted_images(first_image_path, second_image_path, overlap_perce
     second_image_with_highlight.save(os.path.join(output_dir, second_image_name.replace('.jpg', '_with_highlight.jpg')))
 
 
-output_dir = "../Images/Undistorted_Images/Undistored_Images_Overlap"
+output_dir = "../Images2/Undistorted_Images/Undistored_Images_Overlap"
 
 # Paths relative to the script location
-first_image_path = "../Images/Undistorted_Images/cam07.jpg"
-second_image_path = "../Images/Undistorted_Images/cam08.jpg"
+first_image_path = "../Images2/cam07_1616343527700.jpg"
+second_image_path = "../Images2/cam08_1616343527700.jpg"
 
 # Example usage with a 20% overlap
 create_highlighted_images(first_image_path, second_image_path, area_percentage, output_dir)

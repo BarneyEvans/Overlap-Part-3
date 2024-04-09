@@ -21,7 +21,7 @@ def create_directories(base_path):
 
 def main():
     # Base path for YOLOv8 dataset
-    base_path = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V2\dataset'
+    base_path = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov4_Structure\V2'
     create_directories(base_path)
 
 if __name__ == '__main__':

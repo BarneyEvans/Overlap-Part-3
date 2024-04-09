@@ -37,7 +37,7 @@ def generate_bev_images(dataset, output_dir):
     seq_id = '000076'  # Replace with actual seq_id as needed
 
     # Construct the path to the lidar_roof directory
-    lidar_path = os.path.join(dataset.data_root, seq_id, 'lidar_roof')
+    lidar_path = os.path.join(dataset.data_root, "data", seq_id, 'lidar_roof')
 
     print(lidar_path)
 

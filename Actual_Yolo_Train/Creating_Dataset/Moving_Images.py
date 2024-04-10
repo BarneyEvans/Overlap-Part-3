@@ -28,6 +28,7 @@ def copy_and_rename_images(source_dir, dest_dir, sequence_ids, cameras):
                     new_image_name = f"{camera}_{image_file}"
                     src_file_path = os.path.join(src_camera_dir, image_file)
                     dest_file_path = os.path.join(dest_dir, new_image_name)
+                    print(src_file_path, dest_file_path)
                     shutil.copy2(src_file_path, dest_file_path)
                     logging.info(f"Copied and renamed {src_file_path} to {dest_file_path}")
             else:
@@ -37,17 +38,18 @@ def main():
     dataset_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V2\dataset'
     original_dataset_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\data'
     split_files_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\ImageSets'
+    temp_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\temp_annotations'
     cameras = ['cam01', 'cam03', 'cam05', 'cam06', 'cam07', 'cam08', 'cam09']
 
     # Read the sequence IDs from the split files
-    train_ids = get_sequence_ids(os.path.join(split_files_dir, 'train_split.txt'))
-    val_ids = get_sequence_ids(os.path.join(split_files_dir, 'val_split.txt'))
-    test_ids = get_sequence_ids(os.path.join(split_files_dir, 'test_split.txt'))
+    train_ids = get_sequence_ids(os.path.join(split_files_dir, 'train.txt'))
+    val_ids = get_sequence_ids(os.path.join(split_files_dir, 'val.txt'))
+    test_ids = get_sequence_ids(os.path.join(split_files_dir, 'test.txt'))
 
     # Copy and rename images to the respective directories
-    copy_and_rename_images(original_dataset_dir, os.path.join(dataset_base, 'images', 'train'), train_ids, cameras)
-    copy_and_rename_images(original_dataset_dir, os.path.join(dataset_base, 'images', 'val'), val_ids, cameras)
-    copy_and_rename_images(original_dataset_dir, os.path.join(dataset_base, 'images', 'test'), test_ids, cameras)
+    copy_and_rename_images(original_dataset_dir, os.path.join(temp_dir), train_ids, cameras)
+    copy_and_rename_images(original_dataset_dir, os.path.join(temp_dir), val_ids, cameras)
+    copy_and_rename_images(original_dataset_dir, os.path.join(temp_dir), test_ids, cameras)
 
 if __name__ == '__main__':
     main()

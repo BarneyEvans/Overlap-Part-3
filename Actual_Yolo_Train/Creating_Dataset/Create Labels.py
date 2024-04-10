@@ -1,57 +1,23 @@
 import json
 import os
 import logging
+import random
+import shutil
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
-def get_sequence_ids(split_file):
-    """
-    Reads a split file and returns the list of sequence IDs.
-    """
-    with open(split_file, 'r') as file:
-        sequence_ids = file.read().splitlines()
-    return sequence_ids
+def get_full_dataset_base_path():
+    return r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet'
 
 def load_json_annotations(json_path):
-    """
-    Loads JSON annotations for a sequence ID.
-    """
     with open(json_path, 'r') as file:
         return json.load(file)
 
-def save_yolo_annotations(annotations, output_dir, class_mapping, image_dimensions):
-    """
-    Saves YOLO formatted annotations for all frames and cameras.
-    """
-    for frame in annotations.get("frames", []):
-        frame_id = frame["frame_id"]
-        for camera, boxes_2d in frame.get("annos", {}).get("boxes_2d", {}).items():
-            if not boxes_2d:
-                continue
-            output_file_path = os.path.join(output_dir, f"{camera}_{frame_id}.txt")
-            with open(output_file_path, 'w') as file:
-                for name, box in zip(frame.get("annos", {}).get("names", []), boxes_2d):
-                    if name not in class_mapping or box[0] == -1.0:
-                        continue  # Skip if class not recognized or invalid box
-                    # Normalize and format bounding box
-                    class_id = class_mapping[name]
-                    x_center, y_center, width, height = convert_bbox_to_yolo(box, image_dimensions)
-                    file.write(f"{class_id} {x_center} {y_center} {width} {height}\n")
-                logging.info(f"Annotations saved to {output_file_path}")
-
 def convert_bbox_to_yolo(box, image_dimensions):
-    """
-    Converts bounding box coordinates to YOLO format.
-    """
     x1, y1, x2, y2 = box
-    width = image_dimensions[0]
-    height = image_dimensions[1]
+    width, height = image_dimensions
     dw = 1. / width
     dh = 1. / height
-    x = (x1 + x2) / 2.0
-    y = (y1 + y2) / 2.0
+    x = (x1 + x2) / 2.0 - x1
+    y = (y1 + y2) / 2.0 - y1
     w = x2 - x1
     h = y2 - y1
     x = x * dw
@@ -60,45 +26,77 @@ def convert_bbox_to_yolo(box, image_dimensions):
     h = h * dh
     return x, y, w, h
 
+def save_yolo_annotations(annotations, output_dir, class_mapping, image_dimensions, cameras):
+    os.makedirs(output_dir, exist_ok=True)
+    for frame in annotations.get("frames", []):
+        frame_id = frame["frame_id"]
+        for camera in cameras:
+            if camera not in frame.get("annos", {}).get("boxes_2d", {}):
+                continue
+            boxes_2d = frame.get("annos", {}).get("boxes_2d", {}).get(camera, [])
+            if not boxes_2d:
+                continue
+            output_file_path = os.path.join(output_dir, f"{camera}_{frame_id}.txt")
+            with open(output_file_path, 'w') as file:
+                for name, box in zip(frame.get("annos", {}).get("names", []), boxes_2d):
+                    if name not in class_mapping or box[0] == -1.0:
+                        continue  # Skip if class not recognized or invalid box
+                    class_id = class_mapping[name]
+                    x_center, y_center, width, height = convert_bbox_to_yolo(box, image_dimensions)
+                    file.write(f"{class_id} {x_center} {y_center} {width} {height}\n")
+                logging.info(f"Annotations saved to {output_file_path}")
+
+def copy_images_to_split_dirs(sequence_id, cameras, source_dir, dest_dir_base, split):
+    for camera in cameras:
+        src_camera_dir = os.path.join(source_dir, sequence_id, camera)
+        if not os.path.exists(src_camera_dir):
+            continue
+        dest_dir = os.path.join(dest_dir_base, split, camera)
+        os.makedirs(dest_dir, exist_ok=True)
+        for image_file in os.listdir(src_camera_dir):
+            src_file_path = os.path.join(src_camera_dir, image_file)
+            dest_file_path = os.path.join(dest_dir, image_file)
+            if os.path.isfile(src_file_path):
+                shutil.copy2(src_file_path, dest_file_path)
+                logging.info(f"Copied {src_file_path} to {dest_file_path}")
 
 def main():
-    # This should point to the directory that contains 'ImageSets' and 'data'.
-    full_dataset_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet'
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    full_dataset_base = get_full_dataset_base_path()
+    data_dir = os.path.join(full_dataset_base, 'data')
 
-    # Path to the YOLOv8 dataset structure.
-    yolov8_dataset_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Yolov8 Structure\V2\dataset'
-
-    # Now we point to the correct location of the ImageSets directory.
-    split_files_dir = os.path.join(full_dataset_base, 'ImageSets')
+    yolov8_images_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V2", "dataset", "images")
+    yolov8_labels_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V2", "dataset", "labels")
 
     class_mapping = {"Car": 0, "Truck": 1, "Cyclist": 2, "Pedestrian": 3, "Bus": 4}
     image_dimensions = (1920, 1080)  # Assuming all images have the same dimensions
+    cameras = ["cam01", "cam02", "cam03", "cam04"]  # List your cameras here
 
-    # Make sure the ImageSets directory exists and contains the split files.
-    if not os.path.exists(split_files_dir) or not os.listdir(split_files_dir):
-        logging.error(f"Split files are missing in the directory: {split_files_dir}")
-        return
+    all_sequence_ids = [seq_id for seq_id in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, seq_id))]
+    random.shuffle(all_sequence_ids)
 
-    # Iterate through each sequence ID to process annotations
-    for sequence_id in os.listdir(os.path.join(full_dataset_base, 'data')):
-        json_path = os.path.join(full_dataset_base, 'data', sequence_id, f"{sequence_id}.json")
-        if not os.path.isfile(json_path):
-            logging.warning(f"JSON file not found for sequence ID: {sequence_id}")
-            continue
-        annotations = load_json_annotations(json_path)
+    num_sequences = len(all_sequence_ids)
+    train_end = int(num_sequences * 0.8)
+    val_end = train_end + int(num_sequences * 0.1)
 
-        # Determine split based on sequence ID
-        split = "train" if sequence_id in get_sequence_ids(os.path.join(split_files_dir, "train_split.txt")) else \
-            "val" if sequence_id in get_sequence_ids(os.path.join(split_files_dir, "val_split.txt")) else \
-                "test" if sequence_id in get_sequence_ids(os.path.join(split_files_dir, "test_split.txt")) else None
-        if split is None:
-            logging.warning(f"Sequence ID {sequence_id} is not listed in any split.")
-            continue
 
-        output_dir = os.path.join(yolov8_dataset_base, "labels", split)
+    train_ids = all_sequence_ids[:train_end]
+    val_ids = all_sequence_ids[train_end:val_end]
+    test_ids = all_sequence_ids[val_end:]
+    print(len(train_ids), len(val_ids), len(test_ids))
+    return
+    for split, sequence_ids in [("train", train_ids), ("val", val_ids), ("test", test_ids)]:
+        for sequence_id in sequence_ids:
+            json_path = os.path.join(data_dir, sequence_id, f"{sequence_id}.json")
+            if not os.path.isfile(json_path):
+                logging.warning(f"JSON file not found for sequence ID: {sequence_id}")
+                continue
+            annotations = load_json_annotations(json_path)
+            output_label_dir = os.path.join(yolov8_labels_base, split)
+            save_yolo_annotations(annotations, output_label_dir, class_mapping, image_dimensions, cameras)
+            copy_images_to_split_dirs(sequence_id, cameras, data_dir, yolov8_images_base, split)
 
-        # Save annotations in YOLO format
-        save_yolo_annotations(annotations, output_dir, class_mapping, image_dimensions)
+    logging.info("Processing complete.")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+from once import ONCE
 
 def copy_images_based_on_annotations(yolov8_labels_base, temp_images_dir, yolov8_images_base, image_extension='.jpg'):
     """
@@ -41,9 +42,9 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     # Update these paths according to your project structure
-    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V4\dataset\labels'
-    temp_images_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\temp_annotations'
-    yolov8_images_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V4\dataset\images'
+    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V5\dataset\labels'
+    temp_images_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\temp_images'
+    yolov8_images_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V5\dataset\images'
 
     copy_images_based_on_annotations(yolov8_labels_base, temp_images_dir, yolov8_images_base)
 

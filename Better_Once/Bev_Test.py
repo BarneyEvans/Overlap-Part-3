@@ -133,7 +133,7 @@ def point_cloud_to_bev(points, x_range, y_range, z_range, bev_width, bev_height)
 def convert_3d_box_to_bev(box_3d, bev_dims, lidar_range):
     # Extract 3D box parameters
     cx, cy, cz, l, w, h, rot = box_3d
-    # Compute the footprint of the 3D box on the BEV image
+    # cmCompute the footprint of the 3D box on the BEV image
     bev_box = np.array([[cx - l / 2, cy - w / 2], [cx + l / 2, cy + w / 2]])
 
     # Normalize the footprint coordinates to the BEV image dimensions

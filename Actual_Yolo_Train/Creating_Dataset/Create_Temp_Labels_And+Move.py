@@ -94,7 +94,7 @@ def main():
     full_dataset_base = get_full_dataset_base_path()
     data_dir = os.path.join(full_dataset_base, 'data')
     temp_annotations_dir = os.path.join(full_dataset_base, "temp")
-    yolov8_labels_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V2", "dataset", "labels")
+    yolov8_labels_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V5", "dataset", "labels")
 
     class_mapping = {"Car": 0, "Truck": 1, "Cyclist": 2, "Pedestrian": 3, "Bus": 4}
     image_dimensions = (1920, 1080)

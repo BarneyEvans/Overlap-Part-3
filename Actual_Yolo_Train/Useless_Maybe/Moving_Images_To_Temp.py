@@ -1,7 +1,7 @@
 import os
 import shutil
 import logging
-
+from once import ONCE
 
 def move_corresponding_images(yolov8_labels_base, yolov8_images_base, image_extension='.jpg'):
     """
@@ -42,10 +42,11 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     # Update these paths according to your project structure
-    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V4\dataset\labels'
-    yolov8_images_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V4\dataset\images'  # Base directory where images should be moved
-
-    move_corresponding_images(yolov8_labels_base, yolov8_images_base)
+    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V5\dataset\labels'
+    yolov8_images_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V5\dataset\images'  # Base directory where images should be moved
+    dataset = ONCE(
+        dataset_root=r"C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet")
+    move_corresponding_images(yolov8_labels_base, yolov8_images_base, dataset)
 
 
 if __name__ == "__main__":

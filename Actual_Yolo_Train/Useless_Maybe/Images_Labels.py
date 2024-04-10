@@ -43,7 +43,7 @@ def main():
 
     # Update these paths according to your project structure
     temp_annotations_dir = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\temp_annotations'
-    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V4\dataset\labels'
+    yolov8_labels_base = r'C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet\Yolov8 Structure\V5\dataset\labels'
 
     distribute_annotations(temp_annotations_dir, yolov8_labels_base)
 

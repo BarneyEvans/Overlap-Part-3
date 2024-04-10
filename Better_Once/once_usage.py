@@ -12,7 +12,7 @@ if not os.path.exists(output_directory):
     os.makedirs(output_directory)
 
 seq_id = "000112"
-frame_id = "1616535305201"
+frame_id = "1616534767199"
 
 # Load point cloud and camera image.
 points = dataset.load_point_cloud(seq_id, frame_id)

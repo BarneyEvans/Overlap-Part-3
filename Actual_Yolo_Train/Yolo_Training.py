@@ -16,8 +16,7 @@ def main():
     # Train the model with more options
     model.train(
         data=r"C:\Users\evans\PycharmProjects\pythonProject\Overlap-Part-3\Actual_Yolo_Train\dataset.yaml",
-        epochs=100,
-        batch_size=16,
+        epochs=1,
     )
 
     # Save the trained model

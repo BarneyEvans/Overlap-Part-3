@@ -25,6 +25,7 @@ def copy_and_rename_images(dataset, source_dir, dest_dir, sequence_ids, cameras)
         for camera in cameras:
             src_camera_dir = os.path.join(source_dir, seq_id, camera)
             if os.path.exists(src_camera_dir):
+                print("hello")
                 for image_file in os.listdir(src_camera_dir):
                     # Include the camera identifier in the filename
                     new_image_name = f"{camera}_{image_file}"

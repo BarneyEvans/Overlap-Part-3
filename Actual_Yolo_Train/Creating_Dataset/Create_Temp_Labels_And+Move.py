@@ -59,7 +59,8 @@ def process_and_split_annotations(data_dir, temp_annotations_dir, yolov8_labels_
                 boxes_2d = frame.get("annos", {}).get("boxes_2d", {}).get(camera, [])
                 if not boxes_2d:
                     continue
-                output_file_path = os.path.join(temp_annotations_dir, f"{camera}_{frame_id}.txt")
+                # Updated output file path format to include seq_id and camera
+                output_file_path = os.path.join(temp_annotations_dir, f"{sequence_id}_{camera}_{frame_id}.txt")
                 all_annotations.append(output_file_path)
                 with open(output_file_path, 'w') as file:
                     for name, box in zip(frame.get("annos", {}).get("names", []), boxes_2d):
@@ -68,6 +69,7 @@ def process_and_split_annotations(data_dir, temp_annotations_dir, yolov8_labels_
                         class_id = class_mapping[name]
                         x_center, y_center, width, height = convert_bbox_to_yolo(box, image_dimensions)
                         file.write(f"{class_id} {x_center} {y_center} {width} {height}\n")
+
 
     # Shuffle and split annotations
     random.shuffle(all_annotations)
@@ -94,7 +96,7 @@ def main():
     full_dataset_base = get_full_dataset_base_path()
     data_dir = os.path.join(full_dataset_base, 'data')
     temp_annotations_dir = os.path.join(full_dataset_base, "temp")
-    yolov8_labels_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V5", "dataset", "labels")
+    yolov8_labels_base = os.path.join(full_dataset_base, "Yolov8 Structure", "V6", "dataset", "labels")
 
     class_mapping = {"Car": 0, "Truck": 1, "Cyclist": 2, "Pedestrian": 3, "Bus": 4}
     image_dimensions = (1920, 1080)

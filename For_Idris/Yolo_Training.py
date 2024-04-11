@@ -1,8 +1,5 @@
 from ultralytics import YOLO
-import os
 import torch
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 def main():
     # Load a pretrained model (recommended for training)
@@ -13,16 +10,20 @@ def main():
     model.to(device)
     print(f"Training on device: {device}")
 
+    # Define the dataset configuration and model save path relative to the home directory
+    home_dir = '/lyceum/be1g21/V6'
+    data_config_path = f'{home_dir}/dataset/dataset.yaml'
+    model_save_path = f'{home_dir}/trained_model.pt'
+
     # Train the model with more options
     model.train(
-        data=r"C:\Users\evans\PycharmProjects\pythonProject\Overlap-Part-3\Actual_Yolo_Train\dataset.yaml",
-        epochs=10,
+        data=data_config_path,
+        epochs=100,
     )
 
     # Save the trained model
-    model_path = r"C:\Users\evans\PycharmProjects\pythonProject\Overlap-Part-3\Actual_Yolo_Train\trained_model.pt"
-    model.save(model_path)
-    print(f"Trained model saved to {model_path}")
+    model.save(model_save_path)
+    print(f"Trained model saved to {model_save_path}")
 
 if __name__ == '__main__':
     main()

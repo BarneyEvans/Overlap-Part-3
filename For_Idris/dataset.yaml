@@ -1,0 +1,15 @@
+# Project-specific YOLOv8 Dataset Configuration
+
+path: /lyceum/be1g21/V6/dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 5
+names:
+  - Car
+  - Truck
+  - Cyclist
+  - Pedestrian
+  - Bus

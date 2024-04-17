@@ -133,6 +133,13 @@ class ONCE(object):
             return frame_info['annos']
         return None
 
+    def get_frame_info(self, seq_id, frame_id):
+        """
+        Retrieve detailed frame information for a specific sequence and frame.
+        """
+        split_name = self._find_split_name(seq_id)
+        return getattr(self, f'{split_name}_info')[seq_id][frame_id]
+
     def load_point_cloud(self, seq_id, frame_id):
         bin_path = osp.join(self.data_root, seq_id, 'lidar_roof', '{}.bin'.format(frame_id))
         points = np.fromfile(bin_path, dtype=np.float32).reshape(-1, 4)
@@ -168,6 +175,7 @@ class ONCE(object):
             img_buf = self.load_image(seq_id, frame_id, cam_name)
             cam_calib = frame_info['calib'][cam_name]
             h, w = img_buf.shape[:2]
+            print(h,w)
             new_cam_intrinsic, _ = cv2.getOptimalNewCameraMatrix(cam_calib['cam_intrinsic'],
                                           cam_calib['distortion'],
                                           (w, h), alpha=0.0, newImgSize=(w, h))
@@ -207,6 +215,7 @@ class ONCE(object):
             cam_2_velo = calib_info['cam_to_velo']
             cam_intri = np.hstack([new_cam_intrinsic_dict[cam_name], np.zeros((3, 1), dtype=np.float32)])
             point_xyz = points[:, :3]
+            print(point_xyz)
             points_homo = np.hstack(
                 [point_xyz, np.ones(point_xyz.shape[0], dtype=np.float32).reshape((-1, 1))])
             points_lidar = np.dot(points_homo, np.linalg.inv(cam_2_velo).T)

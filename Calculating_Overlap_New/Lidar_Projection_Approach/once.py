@@ -4,6 +4,7 @@ import os.path as osp
 from collections import defaultdict
 import cv2
 import numpy as np
+import os
 from scipy.spatial.transform import Rotation
 
 
@@ -133,6 +134,16 @@ class ONCE(object):
             return frame_info['annos']
         return None
 
+
+
+
+    def get_frame_info(self, seq_id, frame_id):
+        """
+        Retrieve detailed frame information for a specific sequence and frame.
+        """
+        split_name = self._find_split_name(seq_id)
+        return getattr(self, f'{split_name}_info')[seq_id][frame_id]
+
     def load_point_cloud(self, seq_id, frame_id):
         bin_path = osp.join(self.data_root, seq_id, 'lidar_roof', '{}.bin'.format(frame_id))
         points = np.fromfile(bin_path, dtype=np.float32).reshape(-1, 4)
@@ -195,8 +206,12 @@ class ONCE(object):
             print(f"File Exists: {file_exists}")
             print(f"Seq ID '000076' Present: {seq_id_present}")
 
-    def project_lidar_to_image(self, seq_id, frame_id):
-        points = self.load_point_cloud(seq_id, frame_id)
+    def project_lidar_to_image(self, seq_id, frame_id, point_cloud_path=None):
+        # Load point cloud from specified path if provided, otherwise from the default location
+        if point_cloud_path is not None:
+            points = np.fromfile(point_cloud_path, dtype=np.float32).reshape(-1, 4)
+        else:
+            points = self.load_point_cloud(seq_id, frame_id)
 
         split_name = self._find_split_name(seq_id)
         frame_info = getattr(self, '{}_info'.format(split_name))[seq_id][frame_id]
@@ -222,6 +237,42 @@ class ONCE(object):
                     print(int(point[0]), int(point[1]))
             points_img_dict[cam_name] = img_buf
         return points_img_dict
+
+
+    def project_lidar_to_image_enhanced(self, seq_id, frame_id, point_cloud_path=None):
+        if point_cloud_path is not None:
+            points = np.fromfile(point_cloud_path, dtype=np.float32).reshape(-1, 4)
+        else:
+            points = self.load_point_cloud(seq_id, frame_id)
+
+        split_name = self._find_split_name(seq_id)
+        frame_info = getattr(self, '{}_info'.format(split_name))[seq_id][frame_id]
+        points_img_dict = dict()
+        img_list, new_cam_intrinsic_dict = self.undistort_image_v2(seq_id, frame_id)
+
+        for cam_no, cam_name in enumerate(self.__class__.camera_names):
+            cam_calib = frame_info['calib'][cam_name]
+            cam_2_velo = cam_calib['cam_to_velo']
+            cam_intri = np.hstack([new_cam_intrinsic_dict[cam_name], np.zeros((3, 1), dtype=np.float32)])
+            point_xyz = points[:, :3]
+            points_homo = np.hstack([point_xyz, np.ones(point_xyz.shape[0], dtype=np.float32).reshape((-1, 1))])
+            points_lidar = np.dot(points_homo, np.linalg.inv(cam_2_velo).T)
+            mask = points_lidar[:, 2] > 0
+            points_lidar = points_lidar[mask]
+            points_img = np.dot(points_lidar, cam_intri.T)
+            points_img = points_img / points_img[:, [2]]
+            img_buf = img_list[cam_no]
+            for point in points_img:
+                cv2.circle(img_buf, (int(point[0]), int(point[1])), 4, color=(0, 255, 0),
+                           thickness=-1)  # Bright green, larger size
+            points_img_dict[cam_name] = img_buf
+            title = f"Enhanced Image from {cam_name}"
+            cv2.imshow(title, cv2.cvtColor(img_buf, cv2.COLOR_BGR2RGB))
+            cv2.waitKey(0)  # Wait for a key press to close
+            cv2.destroyWindow(title)
+
+        return points_img_dict
+
 
     @staticmethod
     def rotate_z(theta):
@@ -277,6 +328,24 @@ class ONCE(object):
             img_dict[cam_name] = img_buf
         return img_dict
 
+    def get_new_fovs_and_intrinsics(self, seq_id, frame_id, cam_name):
+        split_name = self._find_split_name(seq_id)
+        frame_info = getattr(self, '{}_info'.format(split_name))[seq_id][frame_id]
+        cam_calib = frame_info['calib'][cam_name]
+        h, w = 1020, 1920  # You would actually fetch these from the image dimensions
+
+        # This matches how `undistort_image_v2` calculates the new camera matrix
+        new_cam_intrinsic, roi = cv2.getOptimalNewCameraMatrix(
+            np.array(cam_calib['cam_intrinsic']),
+            np.array(cam_calib['distortion']),
+            (w, h), alpha=0.0, newImgSize=(w, h))
+
+        # Calculate FOVs using the new intrinsic parameters
+        h_fov = 2 * np.degrees(np.arctan(w / (2 * new_cam_intrinsic[0, 0])))
+        v_fov = 2 * np.degrees(np.arctan(h / (2 * new_cam_intrinsic[1, 1])))
+
+        return h_fov, v_fov, new_cam_intrinsic
+
     def frame_concat(self, seq_id, frame_id, concat_cnt=0):
         """
         return new points coordinates according to pose info
@@ -313,6 +382,8 @@ class ONCE(object):
             points_list.append(points)
             return points_list
         return points_list
+
+
 
 
 if __name__ == '__main__':

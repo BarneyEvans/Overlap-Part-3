@@ -1,38 +1,32 @@
 import numpy as np
 from once import ONCE
-from Calculating_Angles_And_Distance import check_camera_alignment, distance_calculation
 from Plot_Frustrum import plot_frustum, plot_two_frustums
 from Camera_Frustum import CameraFrustum
+import json
 
-
-def calculate_frustum_intersection(frustum1, frustum2):
-    pass
-    # Use computational geometry to find the intersection of two frustums
-    # This might involve more complex mathematics or the use of a library
-    # Return the intersection volume or shape
 
 def extract_information(dataset_root, seq_id, frame_id, cam_name):
     dataset = ONCE(dataset_root)
 
-    split_name = dataset._find_split_name(seq_id)
-    frame_info = getattr(dataset, f'{split_name}_info')[seq_id][frame_id]
+    # Ensure the new FOV and intrinsics function is defined and being used correctly
+    h_fov, v_fov, new_intrinsic_matrix = dataset.get_new_fovs_and_intrinsics(seq_id, frame_id, cam_name)
 
-    camera_calibrations = frame_info['calib']
-    cam_calib = camera_calibrations[cam_name]
-    intrinsic_matrix = np.array(cam_calib['cam_intrinsic'])
+    # Properly using the refined or existing method to get frame information
+    frame_info = dataset.get_frame_info(seq_id, frame_id)
+    cam_calib = frame_info['calib'][cam_name]
+
+    # Extracting extrinsic matrix and distortion coefficients correctly
     extrinsic_matrix = np.array(cam_calib['cam_to_velo'])
-    distortion_coefficients = cam_calib['distortion'],
+    distortion_coefficients = np.array(cam_calib['distortion'])  # ensure this is an array, not a tuple
 
-    # Assuming camera 7 and 8 have the same FOVs as CAM_3-8
-    h_fov = 120  # Horizontal field of view in degrees
-    v_fov = 74  # Vertical field of view in degrees (-37 to +37)
+    # Setting near and far plane distances based on typical LiDAR range
+    near_plane_distance = 0.3
+    far_plane_distance = 200
 
-    near_plane_distance = 0.1
-    far_plane_distance = 100
-
+    # Assuming image size is constant; make sure this aligns with actual image dimensions used
     image_size = (1920, 1020)
 
-    return intrinsic_matrix, extrinsic_matrix, near_plane_distance, far_plane_distance, h_fov, v_fov, image_size, distortion_coefficients
+    return new_intrinsic_matrix, extrinsic_matrix, near_plane_distance, far_plane_distance, h_fov, v_fov, image_size, distortion_coefficients
 
 
 dataset_root = r"C:\Users\evans\OneDrive - University of Southampton\Desktop\Year 3\Year 3 Project\Full_DataSet"
@@ -51,7 +45,11 @@ frustum_2.position_and_orient_frustum()
 
 
 
+#plot_frustum(frustum_2.frustum_corners)
+
 #plot_two_frustums(frustum_1.frustum_corners, frustum_2.frustum_corners)
+
+#calculate_frustum_intersection(frustum_1.frustum_corners, frustum_2.frustum_corners)
 
 #print(frustum_1.distortion_coeffs)
 #print(frustum_1.calculate_new_fov())
